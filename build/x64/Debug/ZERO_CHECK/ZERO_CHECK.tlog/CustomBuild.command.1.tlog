@@ -1,0 +1,10 @@
+^C:\USERS\ONEPL\ONEDRIVE\DESKTOP\CPP\TINYRENDERER\BUILD\CMAKEFILES\455EF91D3826E484824ED0F164C588E0\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/onepl/OneDrive/Desktop/cpp/tinyrenderer -BC:/Users/onepl/OneDrive/Desktop/cpp/tinyrenderer/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/onepl/OneDrive/Desktop/cpp/tinyrenderer/build/tinyrenderer.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

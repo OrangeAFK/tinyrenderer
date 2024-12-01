@@ -1,0 +1,10 @@
+^C:\USERS\ONEPL\ONEDRIVE\DESKTOP\CPP\TINYRENDERER\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/onepl/OneDrive/Desktop/cpp/tinyrenderer -BC:/Users/onepl/OneDrive/Desktop/cpp/tinyrenderer/build --check-stamp-file C:/Users/onepl/OneDrive/Desktop/cpp/tinyrenderer/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
