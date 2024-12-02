@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(tinyrenderer VERSION 0.1.0 LANGUAGES C CXX)
+project(tinyrenderer)
 
-file(GLOB_RECURSE SOURCES *.h *.cpp)
+# Collect all the source files recursively in the src/ folder
+file(GLOB_RECURSE SOURCES
+    src/*.cpp
+)
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(tinyrenderer ${SOURCES})
+

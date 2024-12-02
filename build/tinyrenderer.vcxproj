@@ -320,10 +320,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\build\CMakeFiles\3.30.2\CompilerIdCXX\CMakeCXXCompilerId.cpp" />
-    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\main.cpp" />
-    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\tgaimage.cpp" />
-    <ClInclude Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\tgaimage.h" />
+    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\src\main.cpp" />
+    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\src\model.cpp" />
+    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\src\tgaimage.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\build\ZERO_CHECK.vcxproj">

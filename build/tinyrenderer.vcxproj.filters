@@ -1,28 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\build\CMakeFiles\3.30.2\CompilerIdCXX\CMakeCXXCompilerId.cpp">
+    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\main.cpp">
+    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\src\model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\tgaimage.cpp">
+    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\src\tgaimage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\tgaimage.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{0ACD6AF0-FF76-3762-B6E3-FEC697A6B40E}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{AF06E4F2-BC0F-3C3B-9A60-225B69A189DB}</UniqueIdentifier>
     </Filter>
