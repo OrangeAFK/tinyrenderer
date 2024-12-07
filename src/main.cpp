@@ -66,30 +66,24 @@ Vec3f cartesian_to_barycentric(Vec2i* pts, Vec2i point) {
     return Vec3f(alpha, beta, gamma);
 }
 
-void triangle(Vec2i* pts, TGAImage &image, TGAColor color) {
-    // get bounding box
-    Vec2i bboxMin(image.get_width()-1, image.get_height()-1);
-    Vec2i bboxMax(0, 0);
-    Vec2i screenMax(image.get_width()-1, image.get_height()-1);
-    for(int i=0; i<3; i++)
-    {
-        bboxMin.x = std::max(0, std::min(bboxMin.x, pts[i].x));
-        bboxMax.x = std::min(screenMax.x, std::max(bboxMax.x, pts[i].x));
-
-        bboxMin.y = std::max(0, std::min(bboxMin.y, pts[i].y));
-        bboxMax.y = std::min(screenMax.y, std::max(bboxMax.y, pts[i].y));
-    }
-    Vec2i P;
-    for(P.x=bboxMin.x; P.x<=bboxMax.x; P.x++)
-    {
-        for(P.y=bboxMin.y; P.y<=bboxMax.y; P.y++)
-        {
-            Vec3f baryCoords = cartesian_to_barycentric(pts, P);
-            if(baryCoords.x<0 || baryCoords.y<0 || baryCoords.z<0) { continue; }
-            image.set(P.x, P.y, color);
+void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
+    if (t0.y==t1.y && t0.y==t2.y) return; // i dont care about degenerate triangles
+    if (t0.y>t1.y) std::swap(t0, t1);
+    if (t0.y>t2.y) std::swap(t0, t2);
+    if (t1.y>t2.y) std::swap(t1, t2);
+    int total_height = t2.y-t0.y;
+    for (int i=0; i<total_height; i++) {
+        bool second_half = i>t1.y-t0.y || t1.y==t0.y;
+        int segment_height = second_half ? t2.y-t1.y : t1.y-t0.y;
+        float alpha = (float)i/total_height;
+        float beta  = (float)(i-(second_half ? t1.y-t0.y : 0))/segment_height; // be careful: with above conditions no division by zero here
+        Vec2i A =               t0 + (t2-t0)*alpha;
+        Vec2i B = second_half ? t1 + (t2-t1)*beta : t0 + (t1-t0)*beta;
+        if (A.x>B.x) std::swap(A, B);
+        for (int j=A.x; j<=B.x; j++) {
+            image.set(j, t0.y+i, color); // attention, due to int casts t0.y+i != A.y
         }
     }
-
 }
 
 int main() {
@@ -111,7 +105,7 @@ for (int i=0; i<model->nfaces(); i++) {
     n.normalize(); 
     float intensity = n*light_dir; 
     if (intensity>0) { 
-        triangle(screen_coords, image, TGAColor(intensity*255, intensity*255, intensity*255, 255)); 
+        triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, TGAColor(intensity*255, intensity*255, intensity*255, 255)); 
     } 
 }
 
