@@ -9,10 +9,10 @@
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
 const TGAColor green = TGAColor(0,   255, 0,   255);
-const int width = 800;
-const int height = 800;
+const int width = 200;
+const int height = 200;
 
-void line(Vec2i& p0, Vec2i& p1, TGAImage& image, TGAColor color) { 
+void line(Vec2i p0, Vec2i p1, TGAImage& image, TGAColor color) { 
     bool steep = false;
     if(std::abs(p1.x-p0.x) < std::abs(p1.y-p0.y)) // transpose iterator if the line is steep
     {
@@ -52,28 +52,70 @@ void line(Vec2i& p0, Vec2i& p1, TGAImage& image, TGAColor color) {
     } 
 }
 
-void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
-    line(t0, t1, image, color);
-    line(t1, t2, image, color);
-    line(t2, t0, image, color);
+Vec3f cartesian_to_barycentric(Vec2i* pts, Vec2i point) {
+    // get two triangle edges and a vector from a vertex to the point
+    Vec2i v0 = pts[1] - pts[0];
+    Vec2i v1 = pts[2] - pts[0];
+    Vec2i p = point - pts[0];
+
+    int triangleCross = v1.x*v0.y - v0.x*v1.y;
+    
+    float alpha = (p.x*v0.y - v0.x*p.y)/(float)triangleCross;
+    float beta = (v1.x*p.y - p.x*v1.y)/(float)triangleCross;
+    float gamma = 1 - alpha - beta;
+    return Vec3f(alpha, beta, gamma);
 }
 
-int main(int argc, char** argv) {
-    // wireframe render
-    Model* model = nullptr;
-    model = (argc==2) ? new Model(argv[1]): new Model("obj/african_head.obj");
-	TGAImage image(width, height, TGAImage::RGB);
-    
-    Vec2i t0[3] = {Vec2i(10, 70),   Vec2i(50, 160),  Vec2i(70, 80)};
-    Vec2i t1[3] = {Vec2i(180, 50),  Vec2i(150, 1),   Vec2i(70, 180)};
-    Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)};
+void triangle(Vec2i* pts, TGAImage &image, TGAColor color) {
+    // get bounding box
+    Vec2i bboxMin(image.get_width()-1, image.get_height()-1);
+    Vec2i bboxMax(0, 0);
+    Vec2i screenMax(image.get_width()-1, image.get_height()-1);
+    for(int i=0; i<3; i++)
+    {
+        bboxMin.x = std::max(0, std::min(bboxMin.x, pts[i].x));
+        bboxMax.x = std::min(screenMax.x, std::max(bboxMax.x, pts[i].x));
 
-    triangle(t0[0], t0[1], t0[2], image, red);
-    triangle(t1[0], t1[1], t1[2], image, white);
-    triangle(t2[0], t2[1], t2[2], image, green);
+        bboxMin.y = std::max(0, std::min(bboxMin.y, pts[i].y));
+        bboxMax.y = std::min(screenMax.y, std::max(bboxMax.y, pts[i].y));
+    }
+    Vec2i P;
+    for(P.x=bboxMin.x; P.x<=bboxMax.x; P.x++)
+    {
+        for(P.y=bboxMin.y; P.y<=bboxMax.y; P.y++)
+        {
+            Vec3f baryCoords = cartesian_to_barycentric(pts, P);
+            if(baryCoords.x<0 || baryCoords.y<0 || baryCoords.z<0) { continue; }
+            image.set(P.x, P.y, color);
+        }
+    }
+
+}
+
+int main() {
+    Model* model = new Model("obj/african_head.obj");
+	TGAImage image(width, height, TGAImage::RGB);
+
+Vec3f light_dir(0,0,-1); // define light_dir
+
+for (int i=0; i<model->nfaces(); i++) { 
+    std::vector<int> face = model->face(i); 
+    Vec2i screen_coords[3]; 
+    Vec3f world_coords[3]; 
+    for (int j=0; j<3; j++) { 
+        Vec3f v = model->vert(face[j]); 
+        screen_coords[j] = Vec2i((v.x+1.)*width/2., (v.y+1.)*height/2.); 
+        world_coords[j]  = v; 
+    } 
+    Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]); 
+    n.normalize(); 
+    float intensity = n*light_dir; 
+    if (intensity>0) { 
+        triangle(screen_coords, image, TGAColor(intensity*255, intensity*255, intensity*255, 255)); 
+    } 
+}
 
 	image.flip_vertically(); // set origin to bottom-left of the screen
 	image.write_tga_file("output.tga");
-    delete model;
 	return 0;
 }
