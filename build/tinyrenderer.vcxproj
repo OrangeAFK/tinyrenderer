@@ -320,6 +320,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\src\geometry.cpp" />
     <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\src\main.cpp" />
     <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\src\model.cpp" />
     <ClCompile Include="C:\Users\onepl\OneDrive\Desktop\cpp\tinyrenderer\src\tgaimage.cpp" />

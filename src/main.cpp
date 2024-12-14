@@ -12,6 +12,41 @@ const TGAColor green = TGAColor(0,   255, 0,   255);
 const TGAColor blue = TGAColor(0, 0, 255, 255);
 const int width = 800;
 const int height = 800;
+const int depth = 255;
+
+Vec3f light_dir(0,0,-1);
+Vec3f camera(0,0,3);
+
+Matrix vector_to_matrix(Vec3f& v) {
+    Matrix m(4, 1);
+    m[0][0] = v[0];
+    m[1][0] = v[1];
+    m[2][0] = v[2];
+    m[3][0] = 1.f;
+    return m;
+}
+
+Vec3f matrix_to_vector(Matrix& m) {
+    return Vec3f(m[0][0]/m[3][0], m[1][0]/m[3][0], m[2][0]/m[3][0]);
+}
+
+Matrix viewport(int x, int y, int w, int h) {
+    // transforms bi-unit cube [-1,1]^3 to cube [x,x+w]*[y,y+h]*[0,depth]
+    Matrix m = Matrix::identity(4);
+    // scaling (ex. [-1,1] -> [-w/2, w/2])
+    m[0][0] = w/2.f;
+    m[1][1] = h/2.f;
+    m[2][2] = depth/2.f;
+    // translation (ex. [-w/2, w/2] -> [x, x+w])
+    m[0][3] = x+w/2.f;
+    m[1][3] = y+h/2.f;
+    m[2][3] = depth/2.f;
+    return m;
+}
+
+Vec3f world2screen(Vec3f v) {
+    return Vec3f(int((v.x+1.)*width/2. + .5), int((v.y+1.)*height/2. + .5), v.z);
+}
 
 void line(Vec2i p0, Vec2i p1, TGAImage& image, TGAColor color) { 
     bool steep = false;
@@ -131,10 +166,6 @@ void texturedTriangle(Vec3f* pts, float* zbuffer, TGAImage& image, TGAImage& tex
     }
 }
 
-Vec3f world2screen(Vec3f v) {
-    return Vec3f(int((v.x+1.)*width/2. + .5), int((v.y+1.)*height/2. + .5), v.z);
-}
-
 int main(int argc, char** argv) {
     Model* model;
     if (2==argc) {
@@ -145,14 +176,15 @@ int main(int argc, char** argv) {
 
     float *zbuffer = new float[width*height];
     for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
+    Matrix Proj = Matrix::identity(4);
+    Proj[3][2] = -1.f/camera.z;
+    Matrix Viewport = viewport(width/8, height/8, width*3/4, height*3/4);
 
     TGAImage image(width, height, TGAImage::RGB);
 
     TGAImage texData;
     texData.read_tga_file("obj/african_head_diffuse.tga");
     texData.flip_vertically();
-
-    Vec3f light_dir(0,0,-1);
 
     for (int i=0; i<model->nfaces(); i++) {
         std::vector<Vec3i> face = model->face(i);
@@ -161,7 +193,10 @@ int main(int argc, char** argv) {
         Vec3f texture[3];
         for (int i=0; i<3; i++) {
             world[i] = model->vert(face[i][0]);
-            screen[i] = world2screen(world[i]);
+            //std::cout << 'w' << world[i];
+            screen[i] = matrix_to_vector(Viewport*Proj*vector_to_matrix(world[i]));
+            //std::cout << 's' << screen[i];
+            //screen[i] = world2screen(world[i]);
             texture[i] = model->texture(face[i][1]);
         }
         Vec3f n = (world[2]-world[0]) ^ (world[1]-world[0]);

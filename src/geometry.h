@@ -1,6 +1,7 @@
 #ifndef __GEOMETRY_H__
 #define __GEOMETRY_H__
 
+#include <vector>
 #include <cmath>
 #include <iostream>
 
@@ -58,5 +59,25 @@ template <class t> std::ostream& operator<<(std::ostream& s, Vec3<t>& v) {
 	s << "(" << v.x << ", " << v.y << ", " << v.z << ")\n";
 	return s;
 }
+
+/////////////////////////////////////////////////////////
+
+class Matrix {
+public:
+	Matrix(int r, int c);
+	static Matrix identity(int dims);
+	std::vector<float>& operator[](const int);
+	Matrix operator*(const Matrix&);
+	Matrix transpose();
+	Matrix inverse();
+	friend std::ostream& operator<<(std::ostream&, Matrix&);
+	int nrows() const { return rows; }
+	int ncols() const { return cols; }
+private:
+	std::vector<std::vector<float>> m;
+	int rows, cols;
+};
+
+/////////////////////////////////////////////////////////
 
 #endif //__GEOMETRY_H__
