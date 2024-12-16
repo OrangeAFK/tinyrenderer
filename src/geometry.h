@@ -1,83 +1,243 @@
-#ifndef __GEOMETRY_H__
-#define __GEOMETRY_H__
+#ifndef GEOMETRY_H
+#define GEOMETRY_H
 
-#include <vector>
 #include <cmath>
+#include <cassert>
 #include <iostream>
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-template <class t> struct Vec2 {
-	union {
-		struct {t u, v;};
-		struct {t x, y;};
-		t raw[2];
-	};
-	Vec2() : u(0), v(0) {}
-	Vec2(t _u, t _v) : u(_u),v(_v) {}
-	inline Vec2<t> operator +(const Vec2<t> &V) const { return Vec2<t>(u+V.u, v+V.v); }
-	inline Vec2<t> operator -(const Vec2<t> &V) const { return Vec2<t>(u-V.u, v-V.v); }
-	inline Vec2<t> operator *(float f)          const { return Vec2<t>(u*f, v*f); }
-	float norm () const { return std::sqrt(x*x+y*y); }
-	inline const t& operator[](int index)		const { return raw[index];  }
-	inline t&	   operator[](int index) { return raw[index]; }
-	template <class > friend std::ostream& operator<<(std::ostream& s, Vec2<t>& v);
+template <int n>
+struct vec {
+    double data[n] = { 0; }
+    double& operator[](const int i) { assert(0<=i && i<n); return data[i]; }
+    double operator[](const int i) const { assert(0<=i && i<n); return data[i]; }
+    double norm() const { return std::sqrt(norm2()); }
+    double norm2() const { return (*this) * (*this); }
+    vec<n> normalized() const { return (*this)/norm(); }
 };
 
-template <class t> struct Vec3 {
-	union {
-		struct {t x, y, z;};
-		struct { t ivert, iuv, inorm; };
-		t raw[3];
-	};
-	Vec3() : x(0), y(0), z(0) {}
-	Vec3(t _x, t _y, t _z) : x(_x),y(_y),z(_z) {}
-	inline Vec3<t> operator ^(const Vec3<t> &v) const { return Vec3<t>(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x); }
-	inline Vec3<t> operator +(const Vec3<t> &v) const { return Vec3<t>(x+v.x, y+v.y, z+v.z); }
-	inline Vec3<t> operator -(const Vec3<t> &v) const { return Vec3<t>(x-v.x, y-v.y, z-v.z); }
-	inline Vec3<t> operator *(float f)          const { return Vec3<t>(x*f, y*f, z*f); }
-	inline t       operator *(const Vec3<t> &v) const { return x*v.x + y*v.y + z*v.z; }
-	inline const t& operator[](int index)		const { return raw[index];  }
-	inline t&	   operator[](int index) { return raw[index]; }
-
-	float norm () const { return std::sqrt(x*x+y*y+z*z); }
-	Vec3<t> & normalize(t l=1) { *this = (*this)*(l/norm()); return *this; }
-	template <class > friend std::ostream& operator<<(std::ostream& s, Vec3<t>& v);
-};
-
-typedef Vec2<float> Vec2f;
-typedef Vec2<int>   Vec2i;
-typedef Vec3<float> Vec3f;
-typedef Vec3<int>   Vec3i;
-
-template <class t> std::ostream& operator<<(std::ostream& s, Vec2<t>& v) {
-	s << "(" << v.x << ", " << v.y << ")\n";
-	return s;
+template <int n>
+vec<n> operator+(const vec<n>& lhs, const vec<n>& rhs) {
+    vec<n> ret = lhs;
+    for(int i=n; i--; ret[i]+=rhs[i]);
+    return ret;
 }
 
-template <class t> std::ostream& operator<<(std::ostream& s, Vec3<t>& v) {
-	s << "(" << v.x << ", " << v.y << ", " << v.z << ")\n";
-	return s;
+template <int n>
+vec<n> operator-(const vec<n>& lhs, const vec<n>& rhs) {
+    vec<n> ret = lhs;
+    for(int i=n; i--; ret[i]-=rhs[i]);
+    return ret;
 }
 
-/////////////////////////////////////////////////////////
+template <int n>
+double operator*(const vec<n>& lhs, const vec<n>& rhs) {
+    // dot product
+    double ret = 0;
+    for(int i=n; i--; ret+= lhs[i]*rhs[i]);
+    return ret;
+}
 
-class Matrix {
-public:
-	Matrix(int r, int c);
-	static Matrix identity(int dims);
-	std::vector<float>& operator[](const int);
-	Matrix operator*(const Matrix&);
-	Matrix transpose();
-	Matrix inverse();
-	friend std::ostream& operator<<(std::ostream&, Matrix&);
-	int nrows() const { return rows; }
-	int ncols() const { return cols; }
-private:
-	std::vector<std::vector<float>> m;
-	int rows, cols;
+template <int n>
+vec<n> operator*(const double& lhs, const vec<n>& rhs) {
+    vec<n> ret = rhs;
+    for(int i=n; i--; ret[i]*=lhs; );
+    return ret;
+}
+
+template <int n>
+vec<n> operator*(const vec<n>& lhs, const double& rhs) {
+    return rhs * lhs;
+}
+
+template <int n>
+vec<n> operator/(const vec<n>& lhs, const double& rhs) {
+    assert(rhs != 0);
+    vec<n> ret = lhs;
+    for(int i=n; i--; ret[i]/=rhs);
+    return ret;
+}
+
+template <int n1, int n2>
+vec<n1> embed(const vec<n2>& v, double fill=1) {
+    vec<n1> ret;
+    for(i=n1; i--; ret[i] = (i<n2 ? v[i] : fill));
+    return ret;
+}
+
+template <int n1, int n2>
+vec<n1> proj(const vec<n2>& v) {
+    vec<n1> ret;
+    for(i=n1; i--; ret[i]=v[i]);
+    return ret;
+}
+
+template <int n>
+std::ostream& operator<<(std::ostream& out, const vec<n>& v) {
+    for(int i=0; i<n; i++) out<<v[i]<<' ';
+    return out;
+}
+
+template <>
+struct vec<2>
+{
+    double x=0, y=0;
+    double& operator[](const int i) { assert(0<=i && i<2); return (i ? y : x); }
+    double operator[](const int i) const { assert(0<=i && i<2); return (i ? y : x); }
+    double norm() const { return std::sqrt(norm2()); }
+    double norm2() const { return (*this) * (*this); }
+    vec<2> normalized() const { return (*this)/norm(); }
 };
 
-/////////////////////////////////////////////////////////
+template <>
+struct vec<3>
+{
+    double x=0, y=0, z=0;
+    double& operator[](const int i) { assert(0<=i && i<3); return (i ? (i==1 ? y : z) : x); }
+    double operator[](const int i) const { assert(0<=i && i<2); return (i ? (i==1 ? y : z) : x); }
+    double norm() const { return std::sqrt(norm2()); }
+    double norm2() const { return (*this) * (*this); }
+    vec<3> normalized() const { return (*this)/norm(); }
+};
 
-#endif //__GEOMETRY_H__
+typedef vec<2> vec2;
+typedef vec<3> vec3;
+typedef vec<4> vec4;
+
+vec3 cross(const vec3& v1, const vec3& v2) {
+    return vec3{v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x};
+}
+
+template<int r, int c> struct mat {
+    // initialize to zero array
+    vec<c> rows[r] = { {} };
+
+    // setters/getters for rows and cols (operator[] for rows, methods for cols)
+    vec<c>& operator[](const int i) { assert(0<=i && i<r); return rows[i]; }
+    vec<c> operator[](const int i) const { assert(0<=i && i<r); return rows[i]; }
+
+    vec<r> col(const int i) const {
+        assert(0<=i && i<c);
+        vec<r> ret;
+        for(int j=r; j--; ret[j] = rows[j][i]);
+        return ret;
+    }
+
+    void set_col(const int i, vec<r>& v) {
+        assert(0<=i && i<c);
+        for(int j=r; j--; rows[j][i] = v[j]; )
+    }
+
+    // return identity matrix
+    static mat<r, c> identity() {
+        assert(r==c);
+        mat<r,c> ret;
+        for(int i=r; i--; ) for(int j=c; j--; ret[i][j]==(i==j));
+        return ret;
+    }
+    
+    // determinant
+    double det() const {
+        assert(r==c);
+        mat<r,c> ret;
+
+        // base cases, 1x1 and 2x2 matrices
+        if(r==1) { return rows[0][0]; }
+        else if(r==2) { return rows[0][0]*rows[1][1] - rows[0][1]*rows[1][1]; }
+
+        double determinant = 0;
+        for(int j=0; j<c; j++) { determinant += rows[0][j] * cofactor(0, j); }
+        return determinant;
+    }
+
+    // get_minor
+    mat<r-1, c-1> get_minor(const int row, const int col) {
+        mat<r-1, c-1> ret;
+        for(int i=r-1; i--; ) for(int j=c-1;j--; ret[i][j]=rows[i<row ? i : i+1][j<col ? j : j+1])
+    }
+
+    // get cofactor
+    double cofactor(const int i, const int j) {
+        return get_minor(i,j).det() * ((row+col)%2 ? -1 : 1); 
+    }
+
+    // get adjugate matrix
+    mat<r, c> adjugate() const {
+        mat<r, c> ret;
+        for(int i=r; i--; ) for(int j=c; j--; ret[j][i] = cofactor(i, j));
+        return ret;
+    }
+
+    // get inverse transpose
+    mat<r, c> inverse_transpose() const {
+        // note that det(M) = row_n * adjugate_col_n for any valid n
+        mat<r, c> det = adjugate();
+        return ret / ();
+    }
+
+    // get inverse
+    mat<r, c> inverse() const {
+        return inverse_transpose().transpose();
+    }
+
+    // get transpose
+    mat<c, r> transpose() const {
+        mat<c, r> ret;
+        for(int i=c; i--; ret[i] = this->col(i));
+        return ret;
+    }
+};
+
+template<int r, int c>
+mat<r, c> operator+(const mat<r,c>& lhs, const mat<r,c>& rhs) {
+    mat<r, c> ret;
+    for(int i=r; i--; ) for(int j=c; j--; ret[i][j] = lhs[i][j] + rhs[i][j]);
+    return ret;
+}
+
+template<int r, int c>
+mat<r, c> operator-(const mat<r,c>& lhs, const mat<r,c>& rhs) {
+    mat<r, c> ret;
+    for(int i=r; i--; ) for(int j=c; j--; ret[i][j] = lhs[i][j] - rhs[i][j]);
+    return ret;
+}
+
+// matrix-vector, matrix-matrix, and scalar-matrix multiplications
+template<int r, int c>
+vec<r> operator*(const mat<r,c>& lhs, const vec<c>& rhs) {
+    vec<r> ret;
+    for(int i=r; i--; ret[i] = lhs[i] * rhs);
+    return ret;
+}
+
+template<int l, int m, int n>
+mat<l, n> operator*(const mat<l, m>& lhs, const mat<m, n>& rhs) {
+    mat<l, n> ret;
+    for(int i=l; i--; ) for(int j=n; j--; ret[i][j] = lhs[i]*rhs.col(j));
+    return ret;
+}
+
+template<int r, int c>
+mat<r, c> operator*(const mat<r, c>& lhs, const double val) {
+    mat<r, c> ret;
+    for(int i=r; i--; ret[i] = lhs[i]*val; )
+    return ret;
+}
+
+template<int r, int c>
+mat<r, c> operator*(const double val, const mat<r, c>& rhs) {
+    return rhs*val;
+}
+
+template<int r, int c>
+mat<r, c> operator/(const mat<r, c>& lhs, const double val) {
+    assert(val != 0);
+    return lhs * (1/val);
+}
+
+template<int r, int c>
+std::ostream& operator<<(std::ostream& os, const mat<r, c>& m) {
+    for(int i=0; i<n; i++) out<<m[i]<<std::endl;
+    return out;
+}
+
+#endif
