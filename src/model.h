@@ -2,22 +2,31 @@
 #define __MODEL_H__
 
 #include <vector>
+#include <string>
 #include "geometry.h"
+#include "tgaimage.h"
 
 class Model {
-protected:
-	std::vector<Vec3f> verts_;
-	std::vector<std::vector<Vec3i> > faces_;
-	std::vector<Vec3f> textures_;
-public:
-	Model(const char *filename);
-	~Model();
-	int nverts();
-	int nfaces();
-	int ntextures();
-	Vec3f vert(int i);
-	std::vector<Vec3i> face(int idx);
-	Vec3f texture(int i);
+public: 
+	Model(const std::string filename);
+	int nverts() const;
+	int nfaces() const;
+	vec3 normal(const vec2&) const; 
+	vec3 normal(const int, const int) const;
+	vec3 vert(const int) const;
+	vec3 vert(const int, const int) const;
+	vec2 uv(const int, const int) const;
+	const TGAImage& diffuse() const { return diffusemap; }
+	const TGAImage& specular() const { return specularmap; }
+private:
+	std::vector<vec3> verts; // array of vertices
+	std::vector<vec3> norms; // per-vertex array of normal vectors
+	std::vector<vec2> tex_coord; // per-vertex array of texcoords
+	std::vector<int> facet_vert, facet_tex, facet_norm; // per-triangle indices in the above arrays
+	TGAImage normalmap;
+	TGAImage diffusemap;
+	TGAImage specularmap;
+	void load_texture(const std::string, const std::string, TGAImage&);
 };
 
 #endif //__MODEL_H__
