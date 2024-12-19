@@ -7,7 +7,7 @@
 
 template <int n>
 struct vec {
-    double data[n] = { 0; }
+    double data[n] = { 0 };
     double& operator[](const int i) { assert(0<=i && i<n); return data[i]; }
     double operator[](const int i) const { assert(0<=i && i<n); return data[i]; }
     double norm() const { return std::sqrt(norm2()); }
@@ -40,7 +40,7 @@ double operator*(const vec<n>& lhs, const vec<n>& rhs) {
 template <int n>
 vec<n> operator*(const double& lhs, const vec<n>& rhs) {
     vec<n> ret = rhs;
-    for(int i=n; i--; ret[i]*=lhs; );
+    for(int i=n; i--; ret[i]*=lhs );
     return ret;
 }
 
@@ -60,14 +60,14 @@ vec<n> operator/(const vec<n>& lhs, const double& rhs) {
 template <int n1, int n2>
 vec<n1> embed(const vec<n2>& v, double fill=1) {
     vec<n1> ret;
-    for(i=n1; i--; ret[i] = (i<n2 ? v[i] : fill));
+    for(int i=n1; i--; ret[i] = (i<n2 ? v[i] : fill));
     return ret;
 }
 
 template <int n1, int n2>
 vec<n1> proj(const vec<n2>& v) {
     vec<n1> ret;
-    for(i=n1; i--; ret[i]=v[i]);
+    for(int i=n1; i--; ret[i]=v[i]);
     return ret;
 }
 
@@ -93,7 +93,7 @@ struct vec<3>
 {
     double x=0, y=0, z=0;
     double& operator[](const int i) { assert(0<=i && i<3); return (i ? (i==1 ? y : z) : x); }
-    double operator[](const int i) const { assert(0<=i && i<2); return (i ? (i==1 ? y : z) : x); }
+    double operator[](const int i) const { assert(0<=i && i<3); return (i ? (i==1 ? y : z) : x); }
     double norm() const { return std::sqrt(norm2()); }
     double norm2() const { return (*this) * (*this); }
     vec<3> normalized() const { return (*this)/norm(); }
@@ -103,9 +103,11 @@ typedef vec<2> vec2;
 typedef vec<3> vec3;
 typedef vec<4> vec4;
 
-vec3 cross(const vec3& v1, const vec3& v2) {
+inline vec3 cross(const vec3& v1, const vec3& v2) {
     return vec3{v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x};
 }
+
+template<int n> struct dt;
 
 template<int r, int c> struct mat {
     // initialize to zero array
@@ -113,7 +115,7 @@ template<int r, int c> struct mat {
 
     // setters/getters for rows and cols (operator[] for rows, methods for cols)
     vec<c>& operator[](const int i) { assert(0<=i && i<r); return rows[i]; }
-    vec<c> operator[](const int i) const { assert(0<=i && i<r); return rows[i]; }
+    const vec<c>& operator[](const int i) const { assert(0<=i && i<r); return rows[i]; }
 
     vec<r> col(const int i) const {
         assert(0<=i && i<c);
@@ -124,54 +126,47 @@ template<int r, int c> struct mat {
 
     void set_col(const int i, vec<r>& v) {
         assert(0<=i && i<c);
-        for(int j=r; j--; rows[j][i] = v[j]; )
+        for(int j=r; j--; rows[j][i] = v[j] );
     }
 
     // return identity matrix
     static mat<r, c> identity() {
         assert(r==c);
         mat<r,c> ret;
-        for(int i=r; i--; ) for(int j=c; j--; ret[i][j]==(i==j));
+        for(int i=r; i--; ) for(int j=c; j--; ret[i][j]=(i==j));
         return ret;
     }
     
     // determinant
     double det() const {
-        assert(r==c);
-        mat<r,c> ret;
-
-        // base cases, 1x1 and 2x2 matrices
-        if(r==1) { return rows[0][0]; }
-        else if(r==2) { return rows[0][0]*rows[1][1] - rows[0][1]*rows[1][1]; }
-
-        double determinant = 0;
-        for(int j=0; j<c; j++) { determinant += rows[0][j] * cofactor(0, j); }
-        return determinant;
+        return dt<c>::det(*this);
     }
 
     // get_minor
-    mat<r-1, c-1> get_minor(const int row, const int col) {
+    mat<r-1, c-1> get_minor(const int row, const int col) const {
         mat<r-1, c-1> ret;
-        for(int i=r-1; i--; ) for(int j=c-1;j--; ret[i][j]=rows[i<row ? i : i+1][j<col ? j : j+1])
+        for (int i = 0; i < r - 1; i++)
+            for (int j = 0; j < c - 1; j++)
+                ret[i][j] = rows[i < row ? i : i + 1][j < col ? j : j + 1];
+        return ret;
     }
 
     // get cofactor
-    double cofactor(const int i, const int j) {
-        return get_minor(i,j).det() * ((row+col)%2 ? -1 : 1); 
-    }
+    double cofactor(const int i, const int j) const {
+        return get_minor(i, j).det() * ((i + j) % 2 ? -1 : 1);
+    } 
 
     // get adjugate matrix
     mat<r, c> adjugate() const {
         mat<r, c> ret;
-        for(int i=r; i--; ) for(int j=c; j--; ret[j][i] = cofactor(i, j));
+        for(int i=r; i--; ) for(int j=c; j--; ret[i][j] = cofactor(i, j));
         return ret;
     }
 
     // get inverse transpose
     mat<r, c> inverse_transpose() const {
-        // note that det(M) = row_n * adjugate_col_n for any valid n
-        mat<r, c> det = adjugate();
-        return ret / ();
+        mat<r, c> adj = adjugate();
+        return adj / (adj[0] * rows[0]);
     }
 
     // get inverse
@@ -219,7 +214,7 @@ mat<l, n> operator*(const mat<l, m>& lhs, const mat<m, n>& rhs) {
 template<int r, int c>
 mat<r, c> operator*(const mat<r, c>& lhs, const double val) {
     mat<r, c> ret;
-    for(int i=r; i--; ret[i] = lhs[i]*val; )
+    for(int i=r; i--; ret[i] = lhs[i]*val );
     return ret;
 }
 
@@ -236,8 +231,22 @@ mat<r, c> operator/(const mat<r, c>& lhs, const double val) {
 
 template<int r, int c>
 std::ostream& operator<<(std::ostream& os, const mat<r, c>& m) {
-    for(int i=0; i<n; i++) out<<m[i]<<std::endl;
-    return out;
+    for(int i=0; i<r; i++) os<<m[i]<<std::endl;
+    return os;
 }
+
+template<int n> struct dt {
+    static double det(const mat<n,n>& src) {
+        double ret = 0;
+        for (int i=n; i--; ret += src[0][i]*src.cofactor(0,i));
+        return ret;
+    }
+};
+
+template<> struct dt<1> {
+    static double det(const mat<1,1>& src) {
+        return src[0][0];
+    }
+};
 
 #endif

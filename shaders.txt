@@ -1,0 +1,64 @@
+struct WarholShader : public IShader {
+    vec3 varying_intensity; // written by vertex and read by fragment shader
+    vec3 varying_tex;
+
+    virtual vec4 vertex(int iface, int nthvert) {
+        vec4 gl_Vertex = embed<4>(model->vert(iface, nthvert)); // read vert from .obj
+
+        gl_Vertex = Projection * ModelView * gl_Vertex; // transform to screen coords
+        varying_intensity[nthvert] = std::max(0., model->normal(iface, nthvert)*light_dir.normalized()); // get diffuse lighting intensity
+        return gl_Vertex;
+    }
+
+    virtual bool fragment(vec3 bar, TGAColor &color) {
+        double intensity = varying_intensity*bar;
+        if (intensity>.85) intensity = 1;
+        else if (intensity>.60) intensity = .80;
+        else if (intensity>.45) intensity = .60;
+        else if (intensity>.30) intensity = .45;
+        else if (intensity>.15) intensity = .30;
+        else intensity = 0;
+        color = TGAColor(255, 155, 0)*intensity;
+        return false;
+    }
+};
+
+struct GouraudShader : public IShader {
+    vec3 varying_intensity; // written by vertex and read by fragment shader
+    vec3 varying_tex;
+
+    virtual vec4 vertex(int iface, int nthvert) {
+        vec4 gl_Vertex = embed<4>(model->vert(iface, nthvert)); // read vert from .obj
+
+        gl_Vertex = Projection * ModelView * gl_Vertex; // transform to screen coords
+        varying_intensity[nthvert] = std::max(0., model->normal(iface, nthvert)*light_dir.normalized()); // get diffuse lighting intensity
+        return gl_Vertex;
+    }
+
+    virtual bool fragment(vec3 bar, TGAColor& color) {
+        float intensity = varying_intensity * bar; // interpolates intensity
+        color = TGAColor(255, 255, 255) * intensity;
+        return false; // do not discard
+    }
+};
+
+struct TexShader : public IShader {
+    vec3 varying_intensity; // written by vertex and read by fragment shader
+    mat<2, 3> varying_uv;
+    vec3 light = light_dir.normalized();
+
+    virtual vec4 vertex(int iface, int nthvert) {
+        vec4 gl_Vertex = embed<4>(model->vert(iface, nthvert)); // read vert from .obj
+        gl_Vertex = Projection * ModelView * gl_Vertex; // transform to screen coords
+        varying_intensity[nthvert] = std::max(0., model->normal(iface, nthvert)*light); // get diffuse lighting intensity
+        varying_uv.set_col(nthvert, model->uv(iface, nthvert));
+        return gl_Vertex;
+    }
+
+    virtual bool fragment(vec3 bar, TGAColor& color) {
+        float intensity = varying_intensity * bar; // interpolates intensity
+        vec2 uv = varying_uv * bar;
+        color = (model->diffuse(uv) * intensity);
+        return false; // do not discard
+    }
+};

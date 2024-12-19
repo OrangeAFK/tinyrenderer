@@ -1,8 +1,5 @@
 #include <iostream>
-#include <string>
-#include <fstream>
 #include <sstream>
-#include <vector>
 #include "model.h"
 
 Model::Model(const std::string filename) {
@@ -36,7 +33,7 @@ Model::Model(const std::string filename) {
                 cnt++;
             }
             if(cnt!=3) { std::cerr << "Error: obj file is not triangulated" << std::endl; return; }
-        } else if(!line.compare(0, 3, "vt" )) {
+        } else if(!line.compare(0, 3, "vt ")) {
             iss >> trash >> trash;
             vec2 uv;
             for (int i=0;i<2;i++) iss >> uv[i];
@@ -57,7 +54,10 @@ int Model::nfaces() const {
 }
 vec3 Model::normal(const vec2& uvf) const {
     TGAColor c = normalmap.get(uvf[0]*normalmap.width(), uvf[1]*normalmap.height());
-    return vec3{(double)c[2], (double)c[1], (double)c[0]}*2./255. - vec3{1,1,1};
+    vec3 res;
+    for (int i=0; i<3; i++)
+        res[2-i] = (double)c[i]/255.f*2.f - 1.f;
+    return res;
 }
 vec3 Model::normal(const int iface, const int nthvert) const {
     return norms[facet_vert[iface*3 + nthvert]];
@@ -71,9 +71,15 @@ vec3 Model::vert(const int iface, const int nthvert) const {
 vec2 Model::uv(const int iface, const int nthvert) const {
     return tex_coord[facet_tex[iface*3 + nthvert]];
 }
+
+const TGAColor Model::diffuse(const vec2& uvf) const {
+    return diffusemap.get(uvf[0]*diffusemap.width(), uvf[1]*diffusemap.height());
+}
+
 void Model::load_texture(const std::string filename, const std::string suffix, TGAImage& image) {
     size_t dot = filename.find_last_of('.');
     if(dot==std::string::npos) return;
     std::string texfile = filename.substr(0,dot) + suffix;
     std::cerr << "texture file " << texfile << " loading " << (image.read_tga_file(texfile.c_str()) ? "ok" : "failed") << std::endl;
+    image.flip_vertically();
 }

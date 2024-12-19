@@ -17,6 +17,7 @@ public:
 	vec3 vert(const int, const int) const;
 	vec2 uv(const int, const int) const;
 	const TGAImage& diffuse() const { return diffusemap; }
+	const TGAColor diffuse(const vec2&) const;
 	const TGAImage& specular() const { return specularmap; }
 private:
 	std::vector<vec3> verts; // array of vertices

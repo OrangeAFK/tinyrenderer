@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TGAIMAGE_H
+#define TGAIMAGE_H
 #include <cstdint>
 #include <fstream>
 #include <vector>
@@ -24,6 +25,18 @@ struct TGAColor {
     std::uint8_t bgra[4] = {0,0,0,0};
     std::uint8_t bytespp = 4;
     std::uint8_t& operator[](const int i) { return bgra[i]; }
+
+    TGAColor() = default;
+
+    TGAColor(std::uint8_t b, std::uint8_t g, std::uint8_t r, std::uint8_t a = 255, std::uint8_t bpp = 4)
+        : bgra{b, g, r, a}, bytespp(bpp) {}
+
+    TGAColor operator *(double intensity) const {
+        TGAColor res = *this;
+        intensity = (intensity>1.?1.:(intensity<0.?0.:intensity));
+        for (int i=0; i<3; i++) res.bgra[i] = bgra[i]*intensity;
+        return res;
+    }
 };
 
 struct TGAImage {
@@ -48,3 +61,5 @@ private:
     std::uint8_t bpp = 0;
     std::vector<std::uint8_t> data = {};
 };
+
+#endif
